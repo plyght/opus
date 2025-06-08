@@ -65,9 +65,11 @@ export function useState<T>(initialValue: T): [T, (newValue: T) => void] {
     return [state, setState];
 }
 
-export function useEffect(callback: () => void, _deps?: unknown[]) {
+export function useEffect(callback: () => void, deps?: unknown[]) {
     // Simple implementation - just run the callback
     callback();
+    // deps parameter acknowledged but not used in this simple implementation
+    void deps;
 }
 
 
