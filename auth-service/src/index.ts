@@ -1,9 +1,21 @@
 import express from 'express';
+import type { Request, Response } from 'express';
 import cors from 'cors';
 import { betterAuth } from 'better-auth';
-import Database from 'better-sqlite3';
-import { toExpressHandler } from 'better-auth/adapters/express';
+import { Pool } from 'pg';
 import { createCompatibleJWT } from './jwt-bridge.js';
+
+interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+interface AuthRequest {
+  ip?: string;
+  userAgent?: string;
+  headers?: Record<string, string>;
+}
 
 const app = express();
 const port = 3001;
@@ -15,10 +27,16 @@ app.use(cors({
 
 app.use(express.json());
 
-const db = new Database('./auth.db');
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'opus_db',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'password'
+});
 
 const auth = betterAuth({
-  database: db,
+  database: pool,
   emailAndPassword: {
     enabled: true
   },
@@ -29,29 +47,52 @@ const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || 'your-secret-key-change-in-production',
   baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
   callbacks: {
-    async onSignUp(user) {
+    async onSignUp(user: AuthUser) {
       console.log('User signed up:', user.email);
     },
-    async onSignIn(user, request) {
+    async onSignIn(user: AuthUser, request: AuthRequest) {
       console.log('User signed in:', user.email);
     }
   }
 });
 
-app.use('/auth/*', toExpressHandler(auth));
+app.all('/api/auth/*', (req: Request, res: Response) => {
+  const request = new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
+    method: req.method,
+    headers: req.headers as any,
+    body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined
+  });
 
-app.post('/jwt-token', async (req, res) => {
+  auth.handler(request).then((response) => {
+    res.status(response.status);
+    response.headers.forEach((value, key) => {
+      res.setHeader(key, value);
+    });
+    return response.text().then(text => res.send(text));
+  }).catch((error) => {
+    console.error('Auth handler error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+});
+
+app.post('/jwt-token', async (req: Request, res: Response): Promise<void> => {
   try {
     const { sessionToken } = req.body;
     
     if (!sessionToken) {
-      return res.status(400).json({ error: 'Session token required' });
+      res.status(400).json({ error: 'Session token required' });
+      return;
     }
     
-    const session = await auth.api.getSession({ headers: { cookie: `better-auth.session_token=${sessionToken}` } });
+    const session = await auth.api.getSession({ 
+      headers: new Headers({ 
+        'cookie': `better-auth.session_token=${sessionToken}` 
+      }) 
+    });
     
     if (!session?.user) {
-      return res.status(401).json({ error: 'Invalid session' });
+      res.status(401).json({ error: 'Invalid session' });
+      return;
     }
     
     const jwtToken = createCompatibleJWT(session.user.id, session.user.email);

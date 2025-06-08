@@ -1,12 +1,10 @@
 import { useState, useEffect, Fragment } from '../utils/jsx';
 import type { ApiService } from '../services/ApiService';
-import type { AuthService } from '../services/AuthService';
 import type { Book, SearchQuery } from '../types';
 import { BookStatus } from '../types';
 
 interface BookListProps {
     apiService: ApiService;
-    authService?: AuthService;
 }
 
 export function BookList({ apiService }: BookListProps): Element {
@@ -21,21 +19,21 @@ export function BookList({ apiService }: BookListProps): Element {
     const loadBooks = async (page = 1) => {
         setLoading(true);
         setError(null);
-        
+
         try {
             const query: SearchQuery = {
                 page,
                 limit: 20,
             };
-            
+
             if (searchQuery.trim()) {
                 query.q = searchQuery.trim();
             }
-            
+
             if (selectedStatus) {
                 query.status = selectedStatus as BookStatus;
             }
-            
+
             const response = await apiService.searchBooks(query);
             setBooks(response.books);
             setCurrentPage(response.page);
@@ -119,7 +117,11 @@ export function BookList({ apiService }: BookListProps): Element {
                     />
                     <select
                         value={selectedStatus}
-                        onChange={(e: any) => setSelectedStatus((e.target as HTMLSelectElement).value as BookStatus | '')}
+                        onChange={(e: any) =>
+                            setSelectedStatus(
+                                (e.target as HTMLSelectElement).value as BookStatus | ''
+                            )
+                        }
                     >
                         <option value="">All Status</option>
                         <option value={BookStatus.Available}>Available</option>
@@ -134,21 +136,21 @@ export function BookList({ apiService }: BookListProps): Element {
                 </div>
             </div>
 
-            {error && (
-                <div className="error-message">
-                    {error}
-                </div>
-            )}
+            {error && <div className="error-message">{error}</div>}
 
             {loading ? (
                 <div className="loading">Loading books...</div>
             ) : (
-                <Fragment children={[]}>
+                <Fragment>
                     <div className="books-grid">
-                        {books.map((book) => (
+                        {books.map(book => (
                             <div key={book.id} className="book-card">
                                 {book.cover_url && (
-                                    <img src={book.cover_url} alt={book.title} className="book-cover" />
+                                    <img
+                                        src={book.cover_url}
+                                        alt={book.title}
+                                        className="book-cover"
+                                    />
                                 )}
                                 <div className="book-info">
                                     <h3 className="book-title">{book.title}</h3>
