@@ -1,0 +1,22 @@
+{
+  "name": "opus-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "bun@1.2.15",
+  "workspaces": [
+    "auth-service",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "format": "turbo format",
+    "test": "turbo test",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  }
+}

@@ -12,6 +12,7 @@
     "format": "prettier --write src",
     "typecheck": "tsc --noEmit",
     "prepare": "husky",
+    "clean": "rm -rf dist",
     "lint-all": "bun run lint && bun run typecheck && cd ../backend && cargo fmt --check",
     "format-all": "bun run format && cd ../backend && cargo fmt"
   },

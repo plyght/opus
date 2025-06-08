@@ -50,7 +50,7 @@ const auth = betterAuth({
     async onSignUp(user: AuthUser) {
       console.log('User signed up:', user.email);
     },
-    async onSignIn(user: AuthUser, request: AuthRequest) {
+    async onSignIn(user: AuthUser, _request: AuthRequest) {
       console.log('User signed in:', user.email);
     }
   }

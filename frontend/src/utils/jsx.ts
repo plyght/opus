@@ -72,6 +72,10 @@ export function useEffect(callback: () => void, deps?: unknown[]) {
     void deps;
 }
 
+export function useRef<T>(initialValue: T | null = null): { current: T | null } {
+    return { current: initialValue };
+}
+
 declare global {
     namespace JSX {
         interface IntrinsicElements {
