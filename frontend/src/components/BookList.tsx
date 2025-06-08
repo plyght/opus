@@ -1,12 +1,10 @@
 import { useState, useEffect, Fragment } from '../utils/jsx';
 import type { ApiService } from '../services/ApiService';
-import type { BetterAuthService } from '../services/BetterAuthService';
 import type { Book, SearchQuery } from '../types';
 import { BookStatus } from '../types';
 
 interface BookListProps {
     apiService: ApiService;
-    authService?: BetterAuthService;
 }
 
 export function BookList({ apiService }: BookListProps): Element {

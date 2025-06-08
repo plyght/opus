@@ -1,4 +1,4 @@
-import { useState, useEffect } from '../utils/jsx';
+import { useState, useEffect, useRef } from '../utils/jsx';
 import { BrowserMultiFormatReader } from '@zxing/library';
 import type { ApiService } from '../services/ApiService';
 import type { Book } from '../types';
@@ -15,8 +15,8 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
     const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
     const [selectedDevice, setSelectedDevice] = useState<string>('');
 
-    let codeReader: BrowserMultiFormatReader | null = null;
-    let videoElement: HTMLVideoElement | null = null;
+    const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+    const videoElementRef = useRef<HTMLVideoElement | null>(null);
 
     const initializeCamera = async () => {
         try {
@@ -44,14 +44,14 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
         setBook(null);
 
         try {
-            codeReader = new BrowserMultiFormatReader();
-            videoElement = document.getElementById('scanner-video') as HTMLVideoElement;
+            codeReaderRef.current = new BrowserMultiFormatReader();
+            videoElementRef.current = document.getElementById('scanner-video') as HTMLVideoElement;
 
-            if (!videoElement) {
+            if (!videoElementRef.current) {
                 throw new Error('Video element not found');
             }
 
-            await codeReader.decodeFromVideoDevice(selectedDevice, videoElement, (result, err) => {
+            await codeReaderRef.current.decodeFromVideoDevice(selectedDevice, videoElementRef.current, (result, err) => {
                 if (result) {
                     const scannedCode = result.getText();
                     setScanResult(scannedCode);
@@ -69,8 +69,8 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
     };
 
     const stopScanning = () => {
-        if (codeReader) {
-            codeReader.reset();
+        if (codeReaderRef.current) {
+            codeReaderRef.current.reset();
         }
         setIsScanning(false);
     };
@@ -113,8 +113,8 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
         initializeCamera();
 
         return () => {
-            if (codeReader) {
-                codeReader.reset();
+            if (codeReaderRef.current) {
+                codeReaderRef.current.reset();
             }
         };
     }, []);

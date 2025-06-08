@@ -1,11 +1,9 @@
 import { useState, useEffect } from '../utils/jsx';
 import type { ApiService } from '../services/ApiService';
-import type { BetterAuthService } from '../services/BetterAuthService';
 import type { User, Book, Checkout, CreateBookRequest } from '../types';
 
 interface AdminPanelProps {
     apiService: ApiService;
-    authService?: BetterAuthService;
 }
 
 export function AdminPanel({ apiService }: AdminPanelProps): Element {

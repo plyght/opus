@@ -5,6 +5,18 @@ import { betterAuth } from 'better-auth';
 import { Pool } from 'pg';
 import { createCompatibleJWT } from './jwt-bridge.js';
 
+interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+interface AuthRequest {
+  ip?: string;
+  userAgent?: string;
+  headers?: Record<string, string>;
+}
+
 const app = express();
 const port = 3001;
 
@@ -16,7 +28,11 @@ app.use(cors({
 app.use(express.json());
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/opus_db'
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'opus_db',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'password'
 });
 
 const auth = betterAuth({
@@ -31,10 +47,10 @@ const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || 'your-secret-key-change-in-production',
   baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
   callbacks: {
-    async onSignUp(user: any) {
+    async onSignUp(user: AuthUser) {
       console.log('User signed up:', user.email);
     },
-    async onSignIn(user: any, request: any) {
+    async onSignIn(user: AuthUser, request: AuthRequest) {
       console.log('User signed in:', user.email);
     }
   }

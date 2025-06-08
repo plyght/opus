@@ -29,7 +29,11 @@ export class BetterAuthService {
     async init(): Promise<void> {
         const session = await authClient.getSession();
         if (session?.data) {
-            await this.exchangeSessionForJWT();
+            try {
+                await this.exchangeSessionForJWT();
+            } catch (error) {
+                console.error('Failed to initialize auth service:', error);
+            }
         }
     }
 
