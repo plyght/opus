@@ -61,3 +61,6 @@ temp/
 
 # Bun
 .bun
+
+# Turborepo
+.turbo/
