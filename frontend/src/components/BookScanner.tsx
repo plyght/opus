@@ -23,7 +23,7 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
             const devices = await navigator.mediaDevices?.enumerateDevices();
             const videoInputs = devices?.filter(device => device.kind === 'videoinput') || [];
             setCameraDevices(videoInputs);
-            
+
             if (videoInputs.length > 0 && !selectedDevice) {
                 setSelectedDevice(videoInputs[0]?.deviceId || '');
             }
@@ -46,26 +46,22 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
         try {
             codeReader = new BrowserMultiFormatReader();
             videoElement = document.getElementById('scanner-video') as HTMLVideoElement;
-            
+
             if (!videoElement) {
                 throw new Error('Video element not found');
             }
 
-            await codeReader.decodeFromVideoDevice(
-                selectedDevice,
-                videoElement,
-                (result, err) => {
-                    if (result) {
-                        const scannedCode = result.getText();
-                        setScanResult(scannedCode);
-                        stopScanning();
-                        lookupBook(scannedCode);
-                    }
-                    if (err && !(err instanceof Error)) {
-                        // Scanning in progress
-                    }
+            await codeReader.decodeFromVideoDevice(selectedDevice, videoElement, (result, err) => {
+                if (result) {
+                    const scannedCode = result.getText();
+                    setScanResult(scannedCode);
+                    stopScanning();
+                    lookupBook(scannedCode);
                 }
-            );
+                if (err && !(err instanceof Error)) {
+                    // Scanning in progress
+                }
+            });
         } catch (err) {
             setError('Failed to start camera');
             setIsScanning(false);
@@ -83,7 +79,7 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
         try {
             setError(null);
             const books = await apiService.searchBooks({ q: isbn });
-            
+
             if (books.books.length > 0) {
                 setBook(books.books[0] || null);
             } else {
@@ -103,19 +99,19 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
     const handleManualInput = () => {
         const input = document.getElementById('manual-isbn') as HTMLInputElement;
         const isbn = input?.value.trim();
-        
+
         if (!isbn) {
             setError('Please enter an ISBN');
             return;
         }
-        
+
         setScanResult(isbn);
         lookupBook(isbn);
     };
 
     useEffect(() => {
         initializeCamera();
-        
+
         return () => {
             if (codeReader) {
                 codeReader.reset();
@@ -137,9 +133,11 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
                         <select
                             id="camera-select"
                             value={selectedDevice}
-                            onChange={(e: any) => setSelectedDevice((e.target as HTMLSelectElement).value)}
+                            onChange={(e: any) =>
+                                setSelectedDevice((e.target as HTMLSelectElement).value)
+                            }
                         >
-                            {cameraDevices.map((device) => (
+                            {cameraDevices.map(device => (
                                 <option key={device.deviceId} value={device.deviceId}>
                                     {device.label || `Camera ${device.deviceId.slice(0, 8)}`}
                                 </option>
@@ -154,9 +152,7 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
                             Start Scanning
                         </button>
                     ) : (
-                        <button onClick={stopScanning}>
-                            Stop Scanning
-                        </button>
+                        <button onClick={stopScanning}>Stop Scanning</button>
                     )}
                 </div>
             </div>
@@ -185,18 +181,12 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
                             placeholder="Enter ISBN"
                             onKeyPress={(e: any) => e.key === 'Enter' && handleManualInput()}
                         />
-                        <button onClick={handleManualInput}>
-                            Lookup
-                        </button>
+                        <button onClick={handleManualInput}>Lookup</button>
                     </div>
                 </div>
             </div>
 
-            {error && (
-                <div className="error-message">
-                    {error}
-                </div>
-            )}
+            {error && <div className="error-message">{error}</div>}
 
             {scanResult && (
                 <div className="scan-result">
@@ -213,11 +203,27 @@ export function BookScanner({ apiService }: BookScannerProps): Element {
                         )}
                         <div className="book-info">
                             <h4>{book.title}</h4>
-                            <p><strong>Author:</strong> {book.author}</p>
-                            {book.publisher && <p><strong>Publisher:</strong> {book.publisher}</p>}
-                            {book.isbn && <p><strong>ISBN:</strong> {book.isbn}</p>}
-                            <p><strong>Status:</strong> {book.status}</p>
-                            {book.location && <p><strong>Location:</strong> {book.location}</p>}
+                            <p>
+                                <strong>Author:</strong> {book.author}
+                            </p>
+                            {book.publisher && (
+                                <p>
+                                    <strong>Publisher:</strong> {book.publisher}
+                                </p>
+                            )}
+                            {book.isbn && (
+                                <p>
+                                    <strong>ISBN:</strong> {book.isbn}
+                                </p>
+                            )}
+                            <p>
+                                <strong>Status:</strong> {book.status}
+                            </p>
+                            {book.location && (
+                                <p>
+                                    <strong>Location:</strong> {book.location}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>

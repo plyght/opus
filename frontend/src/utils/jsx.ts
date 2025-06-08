@@ -72,7 +72,6 @@ export function useEffect(callback: () => void, deps?: unknown[]) {
     void deps;
 }
 
-
 declare global {
     namespace JSX {
         interface IntrinsicElements {

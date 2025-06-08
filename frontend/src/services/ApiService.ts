@@ -1,4 +1,11 @@
-import type { Book, BookListResponse, CreateBookRequest, SearchQuery, Checkout, User } from '../types';
+import type {
+    Book,
+    BookListResponse,
+    CreateBookRequest,
+    SearchQuery,
+    Checkout,
+    User,
+} from '../types';
 
 export class ApiService {
     private apiBaseUrl = 'http://localhost:8080/api';

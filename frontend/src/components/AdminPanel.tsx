@@ -1,11 +1,11 @@
 import { useState, useEffect } from '../utils/jsx';
 import type { ApiService } from '../services/ApiService';
-import type { AuthService } from '../services/AuthService';
+import type { BetterAuthService } from '../services/BetterAuthService';
 import type { User, Book, Checkout, CreateBookRequest } from '../types';
 
 interface AdminPanelProps {
     apiService: ApiService;
-    authService?: AuthService;
+    authService?: BetterAuthService;
 }
 
 export function AdminPanel({ apiService }: AdminPanelProps): Element {
@@ -56,7 +56,7 @@ export function AdminPanel({ apiService }: AdminPanelProps): Element {
     const handleTabChange = (tab: 'users' | 'books' | 'checkouts' | 'stats') => {
         setActiveTab(tab);
         setError(null);
-        
+
         switch (tab) {
             case 'users':
                 loadUsers();
@@ -74,16 +74,16 @@ export function AdminPanel({ apiService }: AdminPanelProps): Element {
         event.preventDefault();
         const form = event.target as HTMLFormElement;
         const formData = new FormData(form);
-        
+
         const bookData: CreateBookRequest = {
             title: formData.get('title') as string,
             author: formData.get('author') as string,
-            isbn: formData.get('isbn') as string || undefined,
-            publisher: formData.get('publisher') as string || undefined,
-            description: formData.get('description') as string || undefined,
-            genre: formData.get('genre') as string || undefined,
-            location: formData.get('location') as string || undefined,
-            barcode: formData.get('barcode') as string || undefined,
+            isbn: (formData.get('isbn') as string) || undefined,
+            publisher: (formData.get('publisher') as string) || undefined,
+            description: (formData.get('description') as string) || undefined,
+            genre: (formData.get('genre') as string) || undefined,
+            location: (formData.get('location') as string) || undefined,
+            barcode: (formData.get('barcode') as string) || undefined,
         };
 
         try {
@@ -162,15 +162,9 @@ export function AdminPanel({ apiService }: AdminPanelProps): Element {
                 </nav>
             </div>
 
-            {error && (
-                <div className="error-message">
-                    {error}
-                </div>
-            )}
+            {error && <div className="error-message">{error}</div>}
 
-            {loading && (
-                <div className="loading">Loading...</div>
-            )}
+            {loading && <div className="loading">Loading...</div>}
 
             <div className="admin-content">
                 {activeTab === 'users' && (
@@ -189,9 +183,11 @@ export function AdminPanel({ apiService }: AdminPanelProps): Element {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {users.map((user) => (
+                                    {users.map(user => (
                                         <tr key={user.id}>
-                                            <td>{user.first_name} {user.last_name}</td>
+                                            <td>
+                                                {user.first_name} {user.last_name}
+                                            </td>
                                             <td>{user.email}</td>
                                             <td>{user.username}</td>
                                             <td className={`role-${user.role}`}>{user.role}</td>
@@ -221,14 +217,27 @@ export function AdminPanel({ apiService }: AdminPanelProps): Element {
                             <form className="add-book-form" onSubmit={handleAddBook}>
                                 <h4>Add New Book</h4>
                                 <div className="form-grid">
-                                    <input type="text" name="title" placeholder="Title *" required />
-                                    <input type="text" name="author" placeholder="Author *" required />
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        placeholder="Title *"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="author"
+                                        placeholder="Author *"
+                                        required
+                                    />
                                     <input type="text" name="isbn" placeholder="ISBN" />
                                     <input type="text" name="publisher" placeholder="Publisher" />
                                     <input type="text" name="genre" placeholder="Genre" />
                                     <input type="text" name="location" placeholder="Location" />
                                     <input type="text" name="barcode" placeholder="Barcode" />
-                                    <textarea name="description" placeholder="Description"></textarea>
+                                    <textarea
+                                        name="description"
+                                        placeholder="Description"
+                                    ></textarea>
                                 </div>
                                 <div className="form-actions">
                                     <button type="submit">Add Book</button>
@@ -252,12 +261,14 @@ export function AdminPanel({ apiService }: AdminPanelProps): Element {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {books.map((book) => (
+                                    {books.map(book => (
                                         <tr key={book.id}>
                                             <td>{book.title}</td>
                                             <td>{book.author}</td>
                                             <td>{book.isbn || 'N/A'}</td>
-                                            <td className={`status-${book.status}`}>{book.status}</td>
+                                            <td className={`status-${book.status}`}>
+                                                {book.status}
+                                            </td>
                                             <td>{book.location || 'N/A'}</td>
                                             <td>
                                                 <button
@@ -291,8 +302,13 @@ export function AdminPanel({ apiService }: AdminPanelProps): Element {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {checkouts.map((checkout) => (
-                                        <tr key={checkout.id} className={isOverdue(checkout.due_date) ? 'overdue' : ''}>
+                                    {checkouts.map(checkout => (
+                                        <tr
+                                            key={checkout.id}
+                                            className={
+                                                isOverdue(checkout.due_date) ? 'overdue' : ''
+                                            }
+                                        >
                                             <td>N/A</td>
                                             <td>N/A</td>
                                             <td>{formatDate(checkout.checked_out_at)}</td>
