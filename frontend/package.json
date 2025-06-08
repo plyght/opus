@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --hot src/main.tsx",
+    "dev": "bun run --hot --target=browser src/main.tsx",
     "build": "bun build src/main.tsx --outdir ./dist --target browser --minify",
     "serve": "bun --bun serve dist",
     "lint": "eslint src --ext .ts,.tsx",
