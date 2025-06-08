@@ -1,0 +1,40 @@
+{
+  "name": "opus-frontend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --hot src/main.tsx",
+    "build": "bun build src/main.tsx --outdir ./dist --target browser --minify",
+    "serve": "bun --bun serve dist",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write src",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky",
+    "lint-all": "bun run lint && bun run typecheck && cd ../backend && cargo fmt --check",
+    "format-all": "bun run format && cd ../backend && cargo fmt"
+  },
+  "dependencies": {
+    "@zxing/library": "^0.21.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^7",
+    "@typescript-eslint/parser": "^7",
+    "eslint": "^8",
+    "husky": "^9",
+    "lint-staged": "^15",
+    "prettier": "^3",
+    "typescript": "^5"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "../backend/src/**/*.rs": [
+      "cd ../backend && cargo fmt --check || cargo fmt"
+    ]
+  }
+}
