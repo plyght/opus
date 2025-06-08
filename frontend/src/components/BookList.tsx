@@ -141,7 +141,7 @@ export function BookList({ apiService }: BookListProps): Element {
             {loading ? (
                 <div className="loading">Loading books...</div>
             ) : (
-                <Fragment children={[]}>
+                <Fragment>
                     <div className="books-grid">
                         {books.map(book => (
                             <div key={book.id} className="book-card">
