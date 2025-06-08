@@ -1,4 +1,4 @@
-import { Book, BookListResponse, CreateBookRequest, SearchQuery, Checkout, User } from '../types';
+import type { Book, BookListResponse, CreateBookRequest, SearchQuery, Checkout, User } from '../types';
 
 export class ApiService {
     private apiBaseUrl = 'http://localhost:8080/api';
@@ -37,6 +37,10 @@ export class ApiService {
         return this.request<BookListResponse>(`/books?${params}`);
     }
 
+    async searchBooks(query: SearchQuery = {}): Promise<BookListResponse> {
+        return this.getBooks(query);
+    }
+
     async getBook(id: string): Promise<Book> {
         return this.request<Book>(`/books/${id}`);
     }
@@ -49,6 +53,13 @@ export class ApiService {
         return this.request<Book>('/books', {
             method: 'POST',
             body: JSON.stringify(book),
+        });
+    }
+
+    async createBookFromISBN(isbn: string): Promise<Book> {
+        return this.request<Book>('/books/isbn', {
+            method: 'POST',
+            body: JSON.stringify({ isbn }),
         });
     }
 
@@ -72,8 +83,15 @@ export class ApiService {
         });
     }
 
-    async returnBook(bookId: string): Promise<void> {
-        await this.request<void>(`/books/${bookId}/return`, {
+    async createCheckout(data: { book_id: string; due_date?: string }): Promise<Checkout> {
+        return this.request<Checkout>('/checkouts', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    }
+
+    async returnBook(checkoutId: string): Promise<void> {
+        await this.request<void>(`/checkouts/${checkoutId}/return`, {
             method: 'POST',
         });
     }
@@ -94,6 +112,10 @@ export class ApiService {
     // Checkouts API
     async getCheckouts(): Promise<Checkout[]> {
         return this.request<Checkout[]>('/checkouts');
+    }
+
+    async getActiveCheckouts(): Promise<Checkout[]> {
+        return this.request<Checkout[]>('/checkouts?status=active');
     }
 
     async getCheckout(id: string): Promise<Checkout> {

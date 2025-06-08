@@ -20,13 +20,13 @@ export function createElement(
 
             if (key.startsWith('on') && typeof value === 'function') {
                 const eventName = key.slice(2).toLowerCase();
-                element.addEventListener(eventName, value);
+                element.addEventListener(eventName, value as EventListener);
             } else if (key === 'className') {
-                element.className = value;
+                element.className = value as string;
             } else if (key === 'style' && typeof value === 'object') {
                 Object.assign(element.style, value);
             } else {
-                element.setAttribute(key, value);
+                element.setAttribute(key, String(value));
             }
         }
     }
@@ -44,9 +44,9 @@ export function createElement(
     return element;
 }
 
-export function Fragment(props: { children: (Element | string)[] }): DocumentFragment {
+export function Fragment(props: { children?: (Element | string)[] }): DocumentFragment {
     const fragment = document.createDocumentFragment();
-    for (const child of props.children) {
+    for (const child of props.children || []) {
         if (typeof child === 'string') {
             fragment.appendChild(document.createTextNode(child));
         } else {
@@ -55,6 +55,21 @@ export function Fragment(props: { children: (Element | string)[] }): DocumentFra
     }
     return fragment;
 }
+
+// Simple state management for components
+export function useState<T>(initialValue: T): [T, (newValue: T) => void] {
+    let state = initialValue;
+    const setState = (newValue: T) => {
+        state = newValue;
+    };
+    return [state, setState];
+}
+
+export function useEffect(callback: () => void, _deps?: unknown[]) {
+    // Simple implementation - just run the callback
+    callback();
+}
+
 
 declare global {
     namespace JSX {

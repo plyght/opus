@@ -9,8 +9,7 @@ use axum::{
     middleware::Next,
     response::Response,
 };
-use axum_extra::extract::cookie::{Cookie, CookieJar};
-use http::HeaderMap;
+use axum_extra::extract::cookie::CookieJar;
 use sea_orm::*;
 
 pub async fn auth_middleware(

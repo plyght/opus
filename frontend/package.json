@@ -16,7 +16,8 @@
     "format-all": "bun run format && cd ../backend && cargo fmt"
   },
   "dependencies": {
-    "@zxing/library": "^0.21.3"
+    "@zxing/library": "^0.21.3",
+    "better-auth": "^1.2.8"
   },
   "devDependencies": {
     "@types/bun": "latest",

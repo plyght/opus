@@ -1,4 +1,4 @@
-import { User, AuthResponse, LoginRequest, RegisterRequest } from '../types';
+import type { User, AuthResponse, LoginRequest, RegisterRequest } from '../types';
 
 export class AuthService {
     private apiBaseUrl = 'http://localhost:8080/api';

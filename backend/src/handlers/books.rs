@@ -88,7 +88,7 @@ pub async fn list_books(
     }
 
     if let Some(status) = &query.status {
-        select = select.filter(crate::models::book::Column::Status.eq(status));
+        select = select.filter(crate::models::book::Column::Status.eq(status.clone()));
     }
 
     let total = select

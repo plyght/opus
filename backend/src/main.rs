@@ -1,11 +1,7 @@
-use axum::{
-    Json, Router,
-    routing::{get, post},
-};
+use axum::{Router, routing::get};
 use sea_orm::{Database, DatabaseConnection};
 use std::env;
 use tower_http::cors::CorsLayer;
-use tracing_subscriber;
 
 mod auth;
 mod handlers;
@@ -16,7 +12,7 @@ pub type AppState = DatabaseConnection;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::init();
+    tracing_subscriber::fmt::init();
     dotenvy::dotenv().ok();
 
     let database_url = env::var("DATABASE_URL")

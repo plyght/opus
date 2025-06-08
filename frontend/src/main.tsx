@@ -1,9 +1,9 @@
 import './utils/jsx';
 import { App } from './components/App';
-import { AuthService } from './services/AuthService';
+import { BetterAuthService } from './services/BetterAuthService';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const authService = new AuthService();
+    const authService = new BetterAuthService();
     await authService.init();
 
     const app = <App authService={authService} />;

@@ -1,8 +1,8 @@
-import { AuthService } from '../services/AuthService';
-import { LoginRequest, RegisterRequest } from '../types';
+import { BetterAuthService } from '../services/BetterAuthService';
+import type { LoginRequest, RegisterRequest } from '../types';
 
 interface LoginFormProps {
-    authService: AuthService;
+    authService: BetterAuthService;
 }
 
 export function LoginForm({ authService }: LoginFormProps): Element {
@@ -24,7 +24,7 @@ export function LoginForm({ authService }: LoginFormProps): Element {
         };
 
         try {
-            await authService.login(credentials);
+            await authService.signIn(credentials.email, credentials.password);
             window.location.reload();
         } catch (error) {
             alert('Login failed');
@@ -45,7 +45,8 @@ export function LoginForm({ authService }: LoginFormProps): Element {
         };
 
         try {
-            await authService.register(userData);
+            const name = `${userData.first_name} ${userData.last_name}`;
+            await authService.signUp(userData.email, userData.password, name);
             window.location.reload();
         } catch (error) {
             alert('Registration failed');

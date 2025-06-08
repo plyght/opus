@@ -1,11 +1,11 @@
-import { AuthService } from '../services/AuthService';
+import { BetterAuthService } from '../services/BetterAuthService';
 import { ApiService } from '../services/ApiService';
 import { BookList } from './BookList';
 import { BookScanner } from './BookScanner';
 import { AdminPanel } from './AdminPanel';
 
 interface DashboardProps {
-    authService: AuthService;
+    authService: BetterAuthService;
     apiService: ApiService;
 }
 

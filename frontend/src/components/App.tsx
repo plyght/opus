@@ -1,10 +1,10 @@
-import { AuthService } from '../services/AuthService';
+import { BetterAuthService } from '../services/BetterAuthService';
 import { ApiService } from '../services/ApiService';
 import { LoginForm } from './LoginForm';
 import { Dashboard } from './Dashboard';
 
 interface AppProps {
-    authService: AuthService;
+    authService: BetterAuthService;
 }
 
 export function App({ authService }: AppProps): Element {

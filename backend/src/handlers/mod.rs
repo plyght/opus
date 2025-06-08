@@ -2,9 +2,9 @@ pub mod books;
 pub mod checkouts;
 pub mod users;
 
-use crate::{AppState, auth::middleware::auth_middleware};
+use crate::AppState;
 use axum::{
-    Router, middleware,
+    Router,
     routing::{delete, get, post, put},
 };
 

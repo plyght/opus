@@ -5,13 +5,27 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String, // user id
     pub email: String,
+    #[serde(deserialize_with = "deserialize_role")]
     pub role: UserRole,
     pub exp: i64,
     pub iat: i64,
+}
+
+fn deserialize_role<'de, D>(deserializer: D) -> Result<UserRole, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    match s.as_str() {
+        "user" => Ok(UserRole::User),
+        "admin" => Ok(UserRole::Admin),
+        "developer" => Ok(UserRole::Developer),
+        _ => Ok(UserRole::User), // Default to User for unknown roles
+    }
 }
 
 impl Claims {
