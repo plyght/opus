@@ -30,6 +30,28 @@ export function Login() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: "http://localhost:3000/",
+      });
+    } catch (error) {
+      console.error("Google sign in failed:", error);
+    }
+  };
+
+  const handleGitHubSignIn = async () => {
+    try {
+      await signIn.social({
+        provider: "github",
+        callbackURL: "http://localhost:3000/",
+      });
+    } catch (error) {
+      console.error("GitHub sign in failed:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -97,12 +119,14 @@ export function Login() {
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 type="button"
+                onClick={handleGitHubSignIn}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 GitHub
               </button>
               <button
                 type="button"
+                onClick={handleGoogleSignIn}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 Google

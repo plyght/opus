@@ -14,6 +14,7 @@ prisma.$connect()
 const auth: any = betterAuth({
   baseURL: "http://localhost:3001",
   basePath: "/api/auth",
+  trustedOrigins: ["http://localhost:3000"],
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -39,15 +40,11 @@ const auth: any = betterAuth({
   session: {
     cookieCache: {
       enabled: true,
-      maxAge: 5 * 60,
+      maxAge: 60 * 60 * 24, // 24 hours
     },
   },
   advanced: {
     cookiePrefix: "library-auth",
-    crossSubDomainCookies: {
-      enabled: true,
-      domain: ".localhost",
-    },
   },
 });
 
