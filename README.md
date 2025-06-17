@@ -89,11 +89,11 @@ graph TB
     Email_Service --> Resend
     
     %% Styling
-    classDef frontend fill:#61dafb,stroke:#21759b,color:#000
-    classDef backend fill:#ce422b,stroke:#8b0000,color:#fff
-    classDef database fill:#336791,stroke:#1f4e79,color:#fff
-    classDef external fill:#90ee90,stroke:#006400,color:#000
-    classDef infra fill:#ff6b6b,stroke:#cc0000,color:#fff
+    classDef frontend stroke:#000,color:#000
+    classDef backend stroke:#666,color:#000
+    classDef database stroke:#333,color:#000
+    classDef external stroke:#999,color:#000
+    classDef infra stroke:#000,color:#000
     
     class UI,Scanner,Auth,Router,State frontend
     class API,Auth_Service,Book_Service,Checkout_Service,Email_Service,Middleware,Cron,Overdue_Job backend
