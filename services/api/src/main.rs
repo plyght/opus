@@ -59,6 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let api_port = std::env::var("API_PORT").unwrap_or_else(|_| "8081".to_string());
 
     let pool = sqlx::PgPool::connect(&database_url).await?;
 
@@ -81,8 +82,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(cors)
         .with_state(app_state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
-    info!("Server running on http://0.0.0.0:8080");
+    let bind_addr = format!("0.0.0.0:{}", api_port);
+    let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
+    info!("Server running on http://{}", bind_addr);
 
     axum::serve(listener, app).await?;
 

@@ -14,7 +14,7 @@ export const trpc = createTRPCReact<AppRouter>();
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "http://localhost:8080/trpc",
+      url: "http://localhost:8081/trpc",
     }),
   ],
 });

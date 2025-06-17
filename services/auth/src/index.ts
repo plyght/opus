@@ -1,7 +1,7 @@
 import auth from "./auth";
 import cors from "cors";
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 console.log("Starting auth service on port", PORT);
 
@@ -15,7 +15,7 @@ const server = Bun.serve({
       return new Response(null, {
         status: 200,
         headers: {
-          "Access-Control-Allow-Origin": "http://localhost:5173",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
           "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
           "Access-Control-Allow-Credentials": "true",
@@ -26,7 +26,7 @@ const server = Bun.serve({
     // Add CORS headers to all responses
     const addCorsHeaders = (response: Response) => {
       const newResponse = new Response(response.body, response);
-      newResponse.headers.set("Access-Control-Allow-Origin", "http://localhost:5173");
+      newResponse.headers.set("Access-Control-Allow-Origin", "http://localhost:3000");
       newResponse.headers.set("Access-Control-Allow-Credentials", "true");
       return newResponse;
     };
@@ -38,11 +38,11 @@ const server = Bun.serve({
       }));
     }
 
+
     // Route all auth-related requests to better-auth
     if (url.pathname.startsWith("/api/auth")) {
-      // Remove /api prefix for better-auth
-      const authPath = url.pathname.replace("/api", "");
-      const authUrl = new URL(authPath + url.search, url.origin);
+      // Keep the full path for better-auth
+      const authUrl = new URL(url.pathname + url.search, url.origin);
       
       const authRequest = new Request(authUrl.toString(), {
         method: request.method,
@@ -56,7 +56,7 @@ const server = Bun.serve({
       } catch (error) {
         console.error("Auth handler error:", error);
         return addCorsHeaders(new Response(
-          JSON.stringify({ error: "Internal server error" }), 
+          JSON.stringify({ error: "Internal server error", details: error instanceof Error ? error.message : String(error) }), 
           { 
             status: 500,
             headers: { "Content-Type": "application/json" }
@@ -82,7 +82,7 @@ const server = Bun.serve({
         }
 
         // Create a mock request to verify the session token
-        const verifyRequest = new Request("http://localhost:3000/api/auth/session", {
+        const verifyRequest = new Request("http://localhost:3001/api/auth/session", {
           headers: { 
             "Cookie": `library-auth.session-token=${token}`,
             "Content-Type": "application/json"
