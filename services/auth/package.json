@@ -1,0 +1,27 @@
+{
+  "name": "@library-app/auth",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --target=bun --outfile=dist/index.js",
+    "start": "bun run dist/index.js",
+    "test": "bun test",
+    "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "better-auth": "^0.8.0",
+    "@prisma/client": "^5.7.0",
+    "prisma": "^5.7.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/cors": "^2.8.15",
+    "typescript": "^5.0.0",
+    "eslint": "^8.53.0",
+    "prettier": "^3.0.0"
+  }
+}

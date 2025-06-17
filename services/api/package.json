@@ -1,0 +1,11 @@
+{
+  "name": "@library-app/api",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "cargo run",
+    "build": "cargo build --release",
+    "test": "cargo test",
+    "lint": "cargo clippy -- -D warnings",
+    "format": "cargo fmt --check"
+  }
+}

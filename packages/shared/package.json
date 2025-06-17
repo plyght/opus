@@ -1,0 +1,27 @@
+{
+  "name": "@library-app/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./types": "./src/types/index.ts",
+    "./trpc": "./src/trpc/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@trpc/server": "^10.45.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}

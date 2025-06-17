@@ -1,4 +1,12 @@
-#!/usr/bin/env sh
+#\!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-cd "$(git rev-parse --show-toplevel)/frontend" && bunx lint-staged
+echo "Running pre-commit checks..."
+
+echo "Running Rust clippy..."
+cd services/api && cargo clippy -- -D warnings && cd ../..
+
+echo "Running TypeScript type checks..."
+bun typecheck
+
+echo "Pre-commit checks completed successfully\!"

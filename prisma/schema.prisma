@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum CheckoutStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique
+  name          String
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
+  role          UserRole  @default(USER)
+  isActive      Boolean   @default(true) @map("is_active")
+  maxCheckouts  Int       @default(5) @map("max_checkouts")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  checkouts     Checkout[]
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("users")
+}
+
+model Book {
+  id              String    @id @default(uuid()) @db.Uuid
+  isbn            String    @unique
+  title           String
+  author          String
+  publisher       String?
+  publishedYear   Int?      @map("published_year")
+  genre           String?
+  description     String?
+  coverUrl        String?   @map("cover_url")
+  totalCopies     Int       @default(1) @map("total_copies")
+  availableCopies Int       @default(1) @map("available_copies")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  checkouts       Checkout[]
+
+  @@map("books")
+}
+
+model Checkout {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  bookId            String        @map("book_id") @db.Uuid
+  status            CheckoutStatus @default(ACTIVE)
+  checkedOutAt      DateTime      @default(now()) @map("checked_out_at")
+  dueDate           DateTime      @map("due_date")
+  returnedAt        DateTime?     @map("returned_at")
+  renewalCount      Int           @default(0) @map("renewal_count")
+  maxRenewals       Int           @default(2) @map("max_renewals")
+  overdueEmailSent  Boolean       @default(false) @map("overdue_email_sent")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book              Book          @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@map("checkouts")
+}
+
+model OverdueEmailFailure {
+  id          String   @id @default(uuid()) @db.Uuid
+  checkoutId  String   @map("checkout_id") @db.Uuid
+  errorMessage String  @map("error_message")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("overdue_email_failures")
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(uuid()) @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id") @db.Uuid
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String    @id @default(uuid()) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime  @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@map("verifications")
+}

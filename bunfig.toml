@@ -1,0 +1,14 @@
+[workspace]
+workspaces = ["apps/*", "services/*", "packages/*"]
+
+[install]
+auto = false
+cache = false
+dryRun = false
+production = false
+
+[run]
+silent = false
+
+[test]
+preload = ["./test/setup.ts"]
