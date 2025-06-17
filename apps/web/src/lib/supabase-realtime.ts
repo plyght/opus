@@ -21,6 +21,13 @@ export class LibraryRealtimeManager {
   private channels: Map<string, RealtimeChannel> = new Map()
 
   subscribeToBookAvailability(callback: (update: BookAvailabilityUpdate) => void) {
+    // Check if already subscribed
+    if (this.channels.has('book-availability')) {
+      console.log('Already subscribed to book availability updates')
+      return this.channels.get('book-availability')!
+    }
+
+    console.log('Creating new book availability subscription')
     const channel = supabase
       .channel('book-availability')
       .on(
@@ -43,6 +50,13 @@ export class LibraryRealtimeManager {
   }
 
   subscribeToCheckouts(callback: (update: CheckoutUpdate) => void) {
+    // Check if already subscribed
+    if (this.channels.has('checkouts')) {
+      console.log('Already subscribed to checkout updates')
+      return this.channels.get('checkouts')!
+    }
+
+    console.log('Creating new checkout subscription')
     const channel = supabase
       .channel('checkouts')
       .on(

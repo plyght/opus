@@ -1,5 +1,5 @@
 use axum::{
-    http::{header::CONTENT_TYPE, Method, StatusCode},
+    http::{header::{AUTHORIZATION, CONTENT_TYPE}, Method, StatusCode},
     response::Json,
     routing::get,
     Router,
@@ -7,7 +7,7 @@ use axum::{
 use serde_json::{json, Value};
 use sqlx::PgPool;
 use tokio_cron_scheduler::{Job, JobScheduler};
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use tracing::{info, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -82,9 +82,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-        .allow_headers([CONTENT_TYPE])
-        .allow_origin(Any);
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_headers([CONTENT_TYPE, AUTHORIZATION])
+        .allow_credentials(true)
+        .allow_origin([
+            "http://localhost:3000".parse().unwrap(),
+        ]);
 
     let app = Router::new()
         .route("/health", get(health_check))

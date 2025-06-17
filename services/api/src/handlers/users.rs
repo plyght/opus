@@ -138,9 +138,9 @@ async fn get_current_user(
         _ => return Err(StatusCode::UNAUTHORIZED),
     };
 
-    let auth_service_url =
-        std::env::var("AUTH_SERVICE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-
+    // Validate token with auth service
+    let auth_service_url = "http://localhost:3001";
+    
     let client = reqwest::Client::new();
     let response = client
         .post(format!("{}/verify-token", auth_service_url))
@@ -162,27 +162,57 @@ async fn get_current_user(
         return Err(StatusCode::UNAUTHORIZED);
     }
 
-    let user_data = verification_result
+    // Extract user ID from verification result
+    let user_id_str = verification_result
         .get("user")
-        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    let user_id_str = user_data
-        .get("id")
+        .and_then(|u| u.get("id"))
         .and_then(|v| v.as_str())
-        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+        .ok_or(StatusCode::UNAUTHORIZED)?;
 
     let user_id = uuid::Uuid::parse_str(user_id_str).map_err(|_| StatusCode::BAD_REQUEST)?;
 
+    // Get user from database
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
         .bind(user_id)
-        .fetch_one(&state.db)
+        .fetch_optional(&state.db)
         .await
-        .map_err(|e| match e {
-            sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
-        })?;
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    Ok(Json(user))
+    match user {
+        Some(user) => Ok(Json(user)),
+        None => {
+            // User doesn't exist in our database yet, create from verification data
+            let email = verification_result
+                .get("user")
+                .and_then(|u| u.get("email"))
+                .and_then(|v| v.as_str())
+                .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+
+            let name = verification_result
+                .get("user")
+                .and_then(|u| u.get("name"))
+                .and_then(|v| v.as_str())
+                .unwrap_or(email);
+
+            let new_user = sqlx::query_as::<_, User>(
+                r#"
+                INSERT INTO users (id, email, name, role, max_checkouts)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING *
+                "#,
+            )
+            .bind(user_id)
+            .bind(email)
+            .bind(name)
+            .bind(UserRole::User) // Default to User role
+            .bind(5) // Default checkout limit
+            .fetch_one(&state.db)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+            Ok(Json(new_user))
+        }
+    }
 }
 
 async fn create_user(

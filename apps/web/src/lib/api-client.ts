@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSession } from "./auth-client";
 
 const API_BASE_URL = "http://localhost:8081";
 
@@ -9,16 +10,36 @@ class ApiError extends Error {
   }
 }
 
+async function getSessionToken(): Promise<string | null> {
+  try {
+    const sessionData = await getSession();
+    return sessionData?.data?.session?.id || null;
+  } catch (error) {
+    console.error("Failed to get session:", error);
+    return null;
+  }
+}
+
 async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  // Get auth token from better-auth session
+  const sessionToken = await getSessionToken();
+  const authHeaders: Record<string, string> = {};
+  
+  if (sessionToken) {
+    authHeaders.Authorization = `Bearer ${sessionToken}`;
+  }
+  
   const response = await fetch(url, {
     ...options,
+    credentials: 'include', // Include cookies for CORS
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders,
       ...options.headers,
     },
   });

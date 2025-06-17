@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react'
 import { realtimeManager, type BookAvailabilityUpdate, type CheckoutUpdate } from '../lib/supabase-realtime'
 import { supabase } from '../lib/supabase'
 
@@ -30,12 +30,28 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
   })
 
   const [_invalidationTrigger, setInvalidationTrigger] = useState(0)
+  const isInitializedRef = useRef(false)
+  const isCleaningUpRef = useRef(false)
+  const initTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    console.log('RealtimeProvider: Starting connection attempt to Supabase...')
+    // Prevent multiple initializations (React StrictMode protection)
+    if (isInitializedRef.current || isCleaningUpRef.current) {
+      console.log('RealtimeProvider: Skipping initialization (already initialized or cleaning up)')
+      return
+    }
+
+    // Add a small delay to prevent race conditions in StrictMode
+    initTimeoutRef.current = setTimeout(() => {
+      if (isInitializedRef.current || isCleaningUpRef.current) {
+        return
+      }
+      
+      console.log('RealtimeProvider: Starting connection attempt to Supabase...')
+      isInitializedRef.current = true
     
-    // Test basic Supabase connectivity first
-    const testConnection = async () => {
+      // Test basic Supabase connectivity first
+      const testConnection = async () => {
       try {
         const { data, error } = await supabase.from('books').select('count').limit(1)
         if (error) {
@@ -84,11 +100,21 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     }
 
     initializeRealtime()
+    }, 50) // Small delay to handle StrictMode
 
     return () => {
       console.log('RealtimeProvider: Cleaning up subscriptions...')
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current)
+      }
+      isCleaningUpRef.current = true
       realtimeManager.unsubscribeAll()
       setState(prev => ({ ...prev, isConnected: false }))
+      // Reset flags after a brief delay to allow for re-initialization if needed
+      setTimeout(() => {
+        isInitializedRef.current = false
+        isCleaningUpRef.current = false
+      }, 100)
     }
   }, [])
 

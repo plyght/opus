@@ -55,12 +55,13 @@ export function Scanner() {
   };
 
   const stopScanning = () => {
-    if (readerRef.current) {
-      readerRef.current = null;
-    }
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    if (readerRef.current) {
+      readerRef.current = null;
     }
     setIsScanning(false);
   };
@@ -75,7 +76,7 @@ export function Scanner() {
       try {
         setLastOperation(`Checking out book with ISBN: ${isbn}`);
         setOperationStatus(null);
-        await checkoutMutation.mutateAsync({ isbn, user_id: currentUser.id });
+        await checkoutMutation.mutateAsync({ isbn, user_id: currentUser.id.toString() });
         setLastOperation(`Book checked out successfully! ISBN: ${isbn}`);
         setOperationStatus("success");
         setTimeout(() => {
