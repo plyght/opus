@@ -41,12 +41,16 @@ graph TB
     end
     
     subgraph "Data Layer"
-        DB[(PostgreSQL)]
+        DB[(PostgreSQL/Supabase)]
         Prisma[Prisma ORM]
         SQLx[SQLx Queries]
+        Supabase_Client[Supabase Client]
+        Realtime[Real-time Subscriptions]
         
         Prisma --> DB
         SQLx --> DB
+        Supabase_Client --> DB
+        Realtime --> DB
     end
     
     subgraph "External Services"
@@ -54,6 +58,7 @@ graph TB
         Resend[Resend Email API]
         OAuth_Providers[GitHub/Google OAuth]
         Camera[Device Camera]
+        Supabase_API[Supabase API]
     end
     
     subgraph "Background Jobs"
@@ -77,6 +82,8 @@ graph TB
     Router --> tRPC
     Scanner --> Camera
     Auth --> OAuth_Providers
+    UI --> Supabase_Client
+    State --> Realtime
     
     %% API connections
     tRPC --> API
@@ -87,6 +94,8 @@ graph TB
     Checkout_Service --> SQLx
     Auth_Service --> SQLx
     Email_Service --> Resend
+    Supabase_Client --> Supabase_API
+    Realtime --> Supabase_API
     
     %% Styling
     classDef frontend stroke:#000,color:#fff
@@ -97,8 +106,8 @@ graph TB
     
     class UI,Scanner,Auth,Router,State frontend
     class API,Auth_Service,Book_Service,Checkout_Service,Email_Service,Middleware,Cron,Overdue_Job backend
-    class DB,Prisma,SQLx database
-    class OpenLibrary,Resend,OAuth_Providers,Camera external
+    class DB,Prisma,SQLx,Supabase_Client,Realtime database
+    class OpenLibrary,Resend,OAuth_Providers,Camera,Supabase_API external
     class Docker,Nginx,SSL infra
 ```
 
@@ -115,7 +124,8 @@ graph TB
 | **API Layer** | tRPC | End-to-end type safety |
 | **Backend Framework** | Rust + Axum | High-performance async web framework |
 | **Database ORM** | Prisma + SQLx | Type-safe database queries |
-| **Database** | PostgreSQL | ACID-compliant relational database |
+| **Database** | PostgreSQL/Supabase | ACID-compliant relational database |
+| **Real-time** | Supabase Real-time | Live data synchronization and subscriptions |
 | **Authentication** | Better Auth | Session management + OAuth |
 | **Background Jobs** | Tokio Cron | Scheduled task execution |
 | **Email Service** | Resend API | Transactional email delivery |
@@ -153,9 +163,62 @@ bun run dev
 
 Frontend: http://localhost:3000 | Backend: http://localhost:8080
 
+## Database Options
+
+### Option 1: Supabase (Recommended for Production)
+
+Supabase provides managed PostgreSQL with additional features like real-time subscriptions, built-in auth, and automatic backups.
+
+**Setup:**
+1. Create a Supabase project at https://supabase.com
+2. Follow the guide: `scripts/setup-supabase.md`
+3. Configure environment variables with Supabase credentials
+
+**Benefits:**
+- Managed PostgreSQL database
+- Built-in real-time subscriptions
+- Automatic backups and scaling
+- Global CDN and edge functions
+- Row-level security (RLS)
+
+### Option 2: Local PostgreSQL
+
+For local development or custom deployments.
+
+**Setup:**
+```bash
+# Install PostgreSQL
+createdb library_db
+cp .env.example .env
+# Update DATABASE_URL in .env
+bun run db:migrate
+```
+
+### Option 3: Docker PostgreSQL
+
+Using the included Docker Compose setup.
+
+**Setup:**
+```bash
+docker-compose --profile local-db up -d postgres
+bun run db:migrate
+```
+
 ## Environment Setup
 
-Create `.env` with:
+Create `.env` from `.env.example`:
+
+**For Supabase:**
+```bash
+DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres"
+DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+SUPABASE_URL="https://your-project-ref.supabase.co"
+SUPABASE_ANON_KEY="your-supabase-anon-key"
+BETTER_AUTH_SECRET="your-secure-secret-here"
+RESEND_API_KEY="your-resend-api-key"
+```
+
+**For Local PostgreSQL:**
 ```bash
 DATABASE_URL="postgresql://postgres:password@localhost:5432/library_db"
 BETTER_AUTH_SECRET="your-secure-secret-here"
@@ -174,9 +237,12 @@ bun run db:migrate   # Run database migrations
 
 ## Features
 
-- **Book Management** - Add, edit, delete books with ISBN integration
-- **User Management** - Role-based access control
-- **Barcode Scanning** - Camera-based ISBN scanning
-- **Checkout System** - Track loans, renewals, returns
-- **Email Notifications** - Automated overdue alerts
-- **Authentication** - OAuth support (GitHub, Google)
+- **Book Management** - Add, edit, delete books with ISBN integration and Open Library API metadata
+- **User Management** - Role-based access control with administrative privileges
+- **Barcode Scanning** - Camera-based ISBN scanning with real-time operation feedback
+- **Checkout System** - Track loans, renewals, and returns with live status updates
+- **Real-time Updates** - Live book availability and checkout status synchronization across all clients
+- **Email Notifications** - Automated overdue alerts via Resend API
+- **Authentication** - Session management with OAuth support (GitHub, Google)
+- **Live Dashboard** - Real-time statistics and system connectivity monitoring
+- **Connection Status** - Visual indicators for real-time data synchronization status

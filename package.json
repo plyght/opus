@@ -21,8 +21,9 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "prisma": "^5.7.0",
-    "@prisma/client": "^5.7.0"
+    "@prisma/client": "^5.7.0",
+    "@supabase/supabase-js": "^2.50.0",
+    "prisma": "^5.7.0"
   },
   "devDependencies": {
     "@better-auth/cli": "^1.2.9",

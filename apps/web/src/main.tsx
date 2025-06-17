@@ -5,6 +5,7 @@ import { createTRPCReact } from "@trpc/react-query";
 import { httpBatchLink } from "@trpc/client";
 import type { AppRouter } from "@library-app/shared/trpc";
 import App from "./App.tsx";
+import { RealtimeProvider } from "./contexts/RealtimeContext.tsx";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +23,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <RealtimeProvider>
+          <App />
+        </RealtimeProvider>
       </QueryClientProvider>
     </trpc.Provider>
   </StrictMode>

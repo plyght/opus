@@ -63,4 +63,11 @@ export const bookRouter = t.router({
     .mutation(async ({ input: _input }) => {
       throw new Error("Not implemented");
     }),
+
+  getTotalCount: t.procedure
+    .input(z.void())
+    .output(z.number())
+    .query(async () => {
+      throw new Error("Not implemented");
+    }),
 });

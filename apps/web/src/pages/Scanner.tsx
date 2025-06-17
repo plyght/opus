@@ -1,16 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { trpc } from "../main";
+import { useRealtime } from "../contexts/RealtimeContext";
 
 export function Scanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedCode, setScannedCode] = useState<string>("");
   const [scanMode, setScanMode] = useState<"checkout" | "add">("checkout");
+  const [lastOperation, setLastOperation] = useState<string | null>(null);
+  const [operationStatus, setOperationStatus] = useState<"success" | "error" | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
 
   const checkoutMutation = trpc.checkout.checkoutBook.useMutation();
   const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
+  const { isConnected } = useRealtime();
 
   useEffect(() => {
     return () => {
@@ -64,13 +68,27 @@ export function Scanner() {
   const handleScanResult = async (isbn: string) => {
     if (scanMode === "checkout") {
       try {
+        setLastOperation(`Checking out book with ISBN: ${isbn}`);
+        setOperationStatus(null);
         await checkoutMutation.mutateAsync({ isbn });
-        alert(`Book checked out successfully!`);
+        setLastOperation(`Book checked out successfully! ISBN: ${isbn}`);
+        setOperationStatus("success");
+        setTimeout(() => {
+          setLastOperation(null);
+          setOperationStatus(null);
+        }, 5000);
       } catch (error) {
-        alert(`Failed to checkout book: ${error}`);
+        setLastOperation(`Failed to checkout book: ${error}`);
+        setOperationStatus("error");
+        setTimeout(() => {
+          setLastOperation(null);
+          setOperationStatus(null);
+        }, 5000);
       }
     } else {
       setScannedCode(isbn);
+      setLastOperation(`Scanned ISBN: ${isbn} - Ready to add book`);
+      setOperationStatus("success");
     }
   };
 
@@ -84,7 +102,52 @@ export function Scanner() {
   return (
     <div className="px-4 py-6 sm:px-0">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Barcode Scanner</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Barcode Scanner</h1>
+          <div className="flex items-center space-x-2">
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              isConnected 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-red-100 text-red-800'
+            }`}>
+              <span className={`w-2 h-2 rounded-full mr-1 ${
+                isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'
+              }`}></span>
+              {isConnected ? 'Live Updates' : 'Offline'}
+            </span>
+          </div>
+        </div>
+
+        {lastOperation && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            operationStatus === "success" 
+              ? "bg-green-50 border border-green-200"
+              : operationStatus === "error"
+              ? "bg-red-50 border border-red-200"
+              : "bg-blue-50 border border-blue-200"
+          }`}>
+            <div className="flex items-center">
+              {operationStatus === "success" && (
+                <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+              )}
+              {operationStatus === "error" && (
+                <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+              )}
+              {!operationStatus && (
+                <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
+              )}
+              <span className={`text-sm font-medium ${
+                operationStatus === "success" 
+                  ? "text-green-800"
+                  : operationStatus === "error"
+                  ? "text-red-800"
+                  : "text-blue-800"
+              }`}>
+                {lastOperation}
+              </span>
+            </div>
+          </div>
+        )}
 
         {currentUser?.role === "ADMIN" && (
           <div className="mb-6">
