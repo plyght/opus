@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { trpc } from "../main";
+import { useBookQuery } from "../lib/api-client";
 import { useLiveBook, useRealtime } from "../contexts/RealtimeContext";
 
 function BookItem({ book }: { book: any }) {
@@ -35,7 +35,7 @@ function BookItem({ book }: { book: any }) {
 export function Books() {
   const [searchQuery, setSearchQuery] = useState("");
   const { isConnected } = useRealtime();
-  const { data: books, isLoading } = trpc.book.list.useQuery({
+  const { data: books, isLoading } = useBookQuery.list({
     query: searchQuery,
     limit: 20,
     offset: 0,

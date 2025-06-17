@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { trpc } from "../main";
+import { useCheckoutQuery, useCheckoutMutation } from "../lib/api-client";
 import { useLiveCheckout, useRealtime } from "../contexts/RealtimeContext";
 
 function CheckoutItem({ 
@@ -76,14 +76,14 @@ function CheckoutItem({
 export function Checkouts() {
   const [statusFilter, setStatusFilter] = useState<"ACTIVE" | "RETURNED" | "OVERDUE" | undefined>();
   const { isConnected } = useRealtime();
-  const { data: checkouts, isLoading } = trpc.checkout.list.useQuery({
+  const { data: checkouts, isLoading } = useCheckoutQuery.list({
     status: statusFilter,
     limit: 20,
     offset: 0,
   });
 
-  const returnMutation = trpc.checkout.returnBook.useMutation();
-  const renewMutation = trpc.checkout.renewCheckout.useMutation();
+  const returnMutation = useCheckoutMutation.returnBook();
+  const renewMutation = useCheckoutMutation.renewCheckout();
 
   const handleReturn = async (checkoutId: string) => {
     try {

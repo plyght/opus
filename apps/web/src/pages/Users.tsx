@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { trpc } from "../main";
+import { useUserQuery } from "../lib/api-client";
 
 export function Users() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: users, isLoading } = trpc.user.list.useQuery({
+  const { data: users, isLoading } = useUserQuery.list({
     query: searchQuery,
     limit: 20,
     offset: 0,

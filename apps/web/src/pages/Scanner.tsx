@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import { trpc } from "../main";
+import { useUserQuery, useCheckoutMutation } from "../lib/api-client";
 import { useRealtime } from "../contexts/RealtimeContext";
 
 export function Scanner() {
@@ -12,8 +12,8 @@ export function Scanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
 
-  const checkoutMutation = trpc.checkout.checkoutBook.useMutation();
-  const { data: currentUser } = trpc.user.getCurrentUser.useQuery();
+  const checkoutMutation = useCheckoutMutation.checkoutBook();
+  const { data: currentUser } = useUserQuery.getCurrentUser();
   const { isConnected } = useRealtime();
 
   useEffect(() => {
@@ -67,10 +67,15 @@ export function Scanner() {
 
   const handleScanResult = async (isbn: string) => {
     if (scanMode === "checkout") {
+      if (!currentUser?.id) {
+        setLastOperation("Error: User not authenticated");
+        setOperationStatus("error");
+        return;
+      }
       try {
         setLastOperation(`Checking out book with ISBN: ${isbn}`);
         setOperationStatus(null);
-        await checkoutMutation.mutateAsync({ isbn });
+        await checkoutMutation.mutateAsync({ isbn, user_id: currentUser.id });
         setLastOperation(`Book checked out successfully! ISBN: ${isbn}`);
         setOperationStatus("success");
         setTimeout(() => {

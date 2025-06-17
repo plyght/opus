@@ -443,6 +443,21 @@ async fn checkout_book(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
+    // Sync with Supabase for real-time updates
+    if let Some(ref supabase_sync) = state.supabase_sync {
+        tokio::spawn({
+            let sync = supabase_sync.clone();
+            let checkout = checkout.clone();
+            let book_id = book.id;
+            let available_copies = book.available_copies - 1;
+            let total_copies = book.total_copies;
+            async move {
+                sync.sync_checkout_creation(&checkout).await;
+                sync.sync_book_update(book_id, available_copies, total_copies).await;
+            }
+        });
+    }
+
     let checkout_user = CheckoutUser {
         id: user.id,
         name: user.name,
@@ -512,6 +527,17 @@ async fn return_book(
     tx.commit()
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Sync with Supabase for real-time updates
+    if let Some(ref supabase_sync) = state.supabase_sync {
+        tokio::spawn({
+            let sync = supabase_sync.clone();
+            let checkout = checkout.clone();
+            async move {
+                sync.sync_checkout_update(&checkout).await;
+            }
+        });
+    }
 
     let user = CheckoutUser {
         id: row.get("user_id"),

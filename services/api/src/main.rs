@@ -17,10 +17,12 @@ mod models;
 mod services;
 
 use handlers::{books, checkouts, users};
+use services::supabase_sync::SupabaseSync;
 
 #[derive(Clone)]
 pub struct AppState {
     pub db: PgPool,
+    pub supabase_sync: Option<SupabaseSync>,
 }
 
 async fn health_check() -> Result<Json<Value>, StatusCode> {
@@ -67,7 +69,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     setup_scheduler(pool.clone()).await?;
 
-    let app_state = AppState { db: pool };
+    let supabase_sync = services::supabase_sync::get_supabase_sync();
+    if supabase_sync.is_some() {
+        info!("Supabase sync initialized successfully");
+    } else {
+        warn!("Supabase sync not configured - real-time updates will not be synced");
+    }
+
+    let app_state = AppState { 
+        db: pool,
+        supabase_sync,
+    };
 
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])

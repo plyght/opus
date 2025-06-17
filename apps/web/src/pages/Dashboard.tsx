@@ -1,11 +1,11 @@
-import { trpc } from "../main";
+import { useUserQuery, useBookQuery, useCheckoutQuery } from "../lib/api-client";
 import { useRealtime } from "../contexts/RealtimeContext";
 
 export function Dashboard() {
-  const { data: user } = trpc.user.getCurrentUser.useQuery();
-  const { data: overdueCheckouts } = trpc.checkout.getOverdueCheckouts.useQuery();
-  const { data: totalBooks } = trpc.book.getTotalCount.useQuery();
-  const { data: activeCheckouts } = trpc.checkout.getActiveCount.useQuery();
+  const { data: user } = useUserQuery.getCurrentUser();
+  const { data: overdueCheckouts } = useCheckoutQuery.getOverdueCheckouts();
+  const { data: totalBooks } = useBookQuery.getTotalCount();
+  const { data: activeCheckouts } = useCheckoutQuery.getActiveCount();
   const { isConnected } = useRealtime();
 
   return (
