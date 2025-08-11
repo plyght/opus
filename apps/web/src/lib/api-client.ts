@@ -4,7 +4,10 @@ import { getSession } from "./auth-client";
 const API_BASE_URL = "http://localhost:8081";
 
 class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string
+  ) {
     super(message);
     this.name = "ApiError";
   }
@@ -20,23 +23,20 @@ async function getSessionToken(): Promise<string | null> {
   }
 }
 
-async function fetchApi<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   // Get auth token from better-auth session
   const sessionToken = await getSessionToken();
   const authHeaders: Record<string, string> = {};
-  
+
   if (sessionToken) {
     authHeaders.Authorization = `Bearer ${sessionToken}`;
   }
-  
+
   const response = await fetch(url, {
     ...options,
-    credentials: 'include', // Include cookies for CORS
+    credentials: "include", // Include cookies for CORS
     headers: {
       "Content-Type": "application/json",
       ...authHeaders,

@@ -1,118 +1,118 @@
-import { supabase } from './supabase'
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import { supabase } from "./supabase";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface BookAvailabilityUpdate {
-  id: string
-  title: string
-  available_copies: number
-  total_copies: number
+  id: string;
+  title: string;
+  available_copies: number;
+  total_copies: number;
 }
 
 export interface CheckoutUpdate {
-  id: string
-  user_id: string
-  book_id: string
-  status: 'ACTIVE' | 'RETURNED' | 'OVERDUE'
-  checked_out_at: string
-  due_date: string
+  id: string;
+  user_id: string;
+  book_id: string;
+  status: "ACTIVE" | "RETURNED" | "OVERDUE";
+  checked_out_at: string;
+  due_date: string;
 }
 
 export class LibraryRealtimeManager {
-  private channels: Map<string, RealtimeChannel> = new Map()
+  private channels: Map<string, RealtimeChannel> = new Map();
 
   subscribeToBookAvailability(callback: (update: BookAvailabilityUpdate) => void) {
     // Check if already subscribed
-    if (this.channels.has('book-availability')) {
-      console.log('Already subscribed to book availability updates')
-      return this.channels.get('book-availability')!
+    if (this.channels.has("book-availability")) {
+      console.log("Already subscribed to book availability updates");
+      return this.channels.get("book-availability")!;
     }
 
-    console.log('Creating new book availability subscription')
+    console.log("Creating new book availability subscription");
     const channel = supabase
-      .channel('book-availability')
+      .channel("book-availability")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'books',
-          filter: 'available_copies=neq.old.available_copies',
+          event: "UPDATE",
+          schema: "public",
+          table: "books",
+          filter: "available_copies=neq.old.available_copies",
         },
         (payload) => {
-          const book = payload.new as BookAvailabilityUpdate
-          callback(book)
+          const book = payload.new as BookAvailabilityUpdate;
+          callback(book);
         }
       )
-      .subscribe()
+      .subscribe();
 
-    this.channels.set('book-availability', channel)
-    return channel
+    this.channels.set("book-availability", channel);
+    return channel;
   }
 
   subscribeToCheckouts(callback: (update: CheckoutUpdate) => void) {
     // Check if already subscribed
-    if (this.channels.has('checkouts')) {
-      console.log('Already subscribed to checkout updates')
-      return this.channels.get('checkouts')!
+    if (this.channels.has("checkouts")) {
+      console.log("Already subscribed to checkout updates");
+      return this.channels.get("checkouts")!;
     }
 
-    console.log('Creating new checkout subscription')
+    console.log("Creating new checkout subscription");
     const channel = supabase
-      .channel('checkouts')
+      .channel("checkouts")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'checkouts',
+          event: "*",
+          schema: "public",
+          table: "checkouts",
         },
         (payload) => {
-          const checkout = payload.new as CheckoutUpdate
-          callback(checkout)
+          const checkout = payload.new as CheckoutUpdate;
+          callback(checkout);
         }
       )
-      .subscribe()
+      .subscribe();
 
-    this.channels.set('checkouts', channel)
-    return channel
+    this.channels.set("checkouts", channel);
+    return channel;
   }
 
   subscribeToUserCheckouts(userId: string, callback: (update: CheckoutUpdate) => void) {
     const channel = supabase
       .channel(`user-checkouts-${userId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'checkouts',
+          event: "*",
+          schema: "public",
+          table: "checkouts",
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          const checkout = payload.new as CheckoutUpdate
-          callback(checkout)
+          const checkout = payload.new as CheckoutUpdate;
+          callback(checkout);
         }
       )
-      .subscribe()
+      .subscribe();
 
-    this.channels.set(`user-checkouts-${userId}`, channel)
-    return channel
+    this.channels.set(`user-checkouts-${userId}`, channel);
+    return channel;
   }
 
   unsubscribe(channelName: string) {
-    const channel = this.channels.get(channelName)
+    const channel = this.channels.get(channelName);
     if (channel) {
-      supabase.removeChannel(channel)
-      this.channels.delete(channelName)
+      supabase.removeChannel(channel);
+      this.channels.delete(channelName);
     }
   }
 
   unsubscribeAll() {
     this.channels.forEach((channel) => {
-      supabase.removeChannel(channel)
-    })
-    this.channels.clear()
+      supabase.removeChannel(channel);
+    });
+    this.channels.clear();
   }
 }
 
-export const realtimeManager = new LibraryRealtimeManager()
+export const realtimeManager = new LibraryRealtimeManager();

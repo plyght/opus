@@ -23,14 +23,19 @@ impl SupabaseSync {
 
         Some(Self {
             client: Client::new(),
-            base_url: format!("{}/rest/v1", base_url),
+            base_url: format!("{base_url}/rest/v1"),
             service_key,
         })
     }
 
-    async fn make_request(&self, method: &str, endpoint: &str, body: Option<Value>) -> Result<(), Box<dyn std::error::Error>> {
+    async fn make_request(
+        &self,
+        method: &str,
+        endpoint: &str,
+        body: Option<Value>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let url = format!("{}/{}", self.base_url, endpoint);
-        
+
         let mut request = match method {
             "POST" => self.client.post(&url),
             "PATCH" => self.client.patch(&url),
@@ -39,7 +44,7 @@ impl SupabaseSync {
         };
 
         request = request
-            .header("Authorization", format!("Bearer {}", self.service_key))
+            .header("Authorization", format!("Bearer {service_key}", service_key=self.service_key))
             .header("apikey", &self.service_key)
             .header("Content-Type", "application/json")
             .header("Prefer", "return=minimal");
@@ -49,12 +54,12 @@ impl SupabaseSync {
         }
 
         let response = request.send().await?;
-        
+
         if !response.status().is_success() {
             let status = response.status();
             let text = response.text().await.unwrap_or_default();
             error!("Supabase sync failed: {} - {}", status, text);
-            return Err(format!("Supabase sync failed: {}", status).into());
+            return Err(format!("Supabase sync failed: {status}").into());
         }
 
         Ok(())
@@ -64,7 +69,7 @@ impl SupabaseSync {
         if let Err(e) = self
             .make_request(
                 "PATCH",
-                &format!("books?id=eq.{}", book_id),
+                &format!("books?id=eq.{book_id}"),
                 Some(json!({
                     "available_copies": available_copies,
                     "total_copies": total_copies,
@@ -132,7 +137,10 @@ impl SupabaseSync {
         {
             error!("Failed to sync checkout creation to Supabase: {}", e);
         } else {
-            info!("Successfully synced checkout creation to Supabase: {}", checkout.id);
+            info!(
+                "Successfully synced checkout creation to Supabase: {}",
+                checkout.id
+            );
         }
     }
 
@@ -140,7 +148,7 @@ impl SupabaseSync {
         if let Err(e) = self
             .make_request(
                 "PATCH",
-                &format!("checkouts?id=eq.{}", checkout.id),
+                &format!("checkouts?id=eq.{id}", id=checkout.id),
                 Some(json!({
                     "status": format!("{:?}", checkout.status).to_uppercase(),
                     "due_date": checkout.due_date.to_rfc3339(),
@@ -153,7 +161,10 @@ impl SupabaseSync {
         {
             error!("Failed to sync checkout update to Supabase: {}", e);
         } else {
-            info!("Successfully synced checkout update to Supabase: {}", checkout.id);
+            info!(
+                "Successfully synced checkout update to Supabase: {}",
+                checkout.id
+            );
         }
     }
 

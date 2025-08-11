@@ -41,13 +41,13 @@ async fn list_checkouts(
     let mut where_clause = String::new();
 
     if let Some(user_id) = query.user_id {
-        conditions.push(format!("c.user_id = '{}'", user_id));
+        conditions.push(format!("c.user_id = '{user_id}'"));
     }
     if let Some(book_id) = query.book_id {
-        conditions.push(format!("c.book_id = '{}'", book_id));
+        conditions.push(format!("c.book_id = '{book_id}'"));
     }
     if let Some(ref status) = query.status {
-        conditions.push(format!("c.status = '{:?}'", status).to_uppercase());
+        conditions.push(format!("c.status = '{status:?}'").to_uppercase());
     }
     if let Some(true) = query.overdue {
         conditions.push("c.due_date < NOW() AND c.status = 'ACTIVE'".to_string());
@@ -57,7 +57,7 @@ async fn list_checkouts(
         where_clause = format!(" WHERE {}", conditions.join(" AND "));
     }
 
-    let count_sql = format!("SELECT COUNT(*) FROM checkouts c{}", where_clause);
+    let count_sql = format!("SELECT COUNT(*) FROM checkouts c{where_clause}");
 
     let total_count: i64 = sqlx::query(&count_sql)
         .fetch_one(&state.db)
@@ -74,11 +74,10 @@ async fn list_checkouts(
         FROM checkouts c
         JOIN users u ON c.user_id = u.id
         JOIN books b ON c.book_id = b.id
-        {}
+        {where_clause}
         ORDER BY c.created_at DESC
-        LIMIT {} OFFSET {}
-        "#,
-        where_clause, limit, offset
+        LIMIT {limit} OFFSET {offset}
+        "#
     );
 
     let rows = sqlx::query(&checkouts_sql)
@@ -201,10 +200,10 @@ async fn get_user_checkouts(
     let limit = query.limit.unwrap_or(20).min(100);
     let offset = query.offset.unwrap_or(0);
 
-    let mut conditions = vec![format!("c.user_id = '{}'", user_id)];
+    let mut conditions = vec![format!("c.user_id = '{user_id}'")];
 
     if let Some(ref status) = query.status {
-        conditions.push(format!("c.status = '{:?}'", status).to_uppercase());
+        conditions.push(format!("c.status = '{status:?}'").to_uppercase());
     }
     if let Some(true) = query.overdue {
         conditions.push("c.due_date < NOW() AND c.status = 'ACTIVE'".to_string());
@@ -221,11 +220,10 @@ async fn get_user_checkouts(
         FROM checkouts c
         JOIN users u ON c.user_id = u.id
         JOIN books b ON c.book_id = b.id
-        {}
+        {where_clause}
         ORDER BY c.created_at DESC
-        LIMIT {} OFFSET {}
-        "#,
-        where_clause, limit, offset
+        LIMIT {limit} OFFSET {offset}
+        "#
     );
 
     let rows = sqlx::query(&checkouts_sql)
@@ -453,7 +451,8 @@ async fn checkout_book(
             let total_copies = book.total_copies;
             async move {
                 sync.sync_checkout_creation(&checkout).await;
-                sync.sync_book_update(book_id, available_copies, total_copies).await;
+                sync.sync_book_update(book_id, available_copies, total_copies)
+                    .await;
             }
         });
     }

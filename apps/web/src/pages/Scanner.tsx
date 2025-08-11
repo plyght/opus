@@ -2,13 +2,25 @@ import { useState, useRef, useEffect } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { useUserQuery, useCheckoutMutation } from "../lib/api-client";
 import { useRealtime } from "../contexts/RealtimeContext";
+import { Card, CardContent, CardHeader, Button, Input, Badge } from "../components/ui";
+import {
+  ScanLine,
+  Play,
+  Square,
+  Activity,
+  BookPlus,
+  ShoppingCart,
+  CheckCircle,
+  AlertCircle,
+  Info,
+} from "lucide-react";
 
 export function Scanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedCode, setScannedCode] = useState<string>("");
   const [scanMode, setScanMode] = useState<"checkout" | "add">("checkout");
   const [lastOperation, setLastOperation] = useState<string | null>(null);
-  const [operationStatus, setOperationStatus] = useState<"success" | "error" | null>(null);
+  const [operationStatus, setOperationStatus] = useState<"success" | "error" | "info" | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
 
@@ -19,7 +31,6 @@ export function Scanner() {
   useEffect(() => {
     return () => {
       if (readerRef.current) {
-        // Cleanup will be handled by stopping the video stream
         readerRef.current = null;
       }
     };
@@ -34,7 +45,7 @@ export function Scanner() {
       setIsScanning(true);
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
+        video: { facingMode: "environment" },
       });
 
       videoRef.current.srcObject = stream;
@@ -51,13 +62,15 @@ export function Scanner() {
     } catch (error) {
       console.error("Failed to start scanning:", error);
       setIsScanning(false);
+      setLastOperation("Failed to access camera. Please check permissions.");
+      setOperationStatus("error");
     }
   };
 
   const stopScanning = () => {
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;
     }
     if (readerRef.current) {
@@ -75,7 +88,7 @@ export function Scanner() {
       }
       try {
         setLastOperation(`Checking out book with ISBN: ${isbn}`);
-        setOperationStatus(null);
+        setOperationStatus("info");
         await checkoutMutation.mutateAsync({ isbn, user_id: currentUser.id.toString() });
         setLastOperation(`Book checked out successfully! ISBN: ${isbn}`);
         setOperationStatus("success");
@@ -105,139 +118,174 @@ export function Scanner() {
     }
   };
 
+  const getStatusIcon = (status: string | null) => {
+    switch (status) {
+      case "success":
+        return <CheckCircle className="w-4 h-4" />;
+      case "error":
+        return <AlertCircle className="w-4 h-4" />;
+      case "info":
+        return <Info className="w-4 h-4" />;
+      default:
+        return <Activity className="w-4 h-4" />;
+    }
+  };
+
   return (
     <div className="px-4 py-6 sm:px-0">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Barcode Scanner</h1>
-          <div className="flex items-center space-x-2">
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              isConnected 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
-              <span className={`w-2 h-2 rounded-full mr-1 ${
-                isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'
-              }`}></span>
-              {isConnected ? 'Live Updates' : 'Offline'}
-            </span>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Barcode Scanner</h1>
+            <p className="text-gray-600 mt-1">Scan ISBN barcodes to checkout or add books</p>
           </div>
+          <Badge variant={isConnected ? "success" : "danger"} className="flex items-center">
+            <Activity className={`w-3 h-3 mr-1 ${isConnected ? "animate-pulse" : ""}`} />
+            {isConnected ? "Live Updates" : "Offline"}
+          </Badge>
         </div>
 
         {lastOperation && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            operationStatus === "success" 
-              ? "bg-green-50 border border-green-200"
-              : operationStatus === "error"
-              ? "bg-red-50 border border-red-200"
-              : "bg-blue-50 border border-blue-200"
-          }`}>
-            <div className="flex items-center">
-              {operationStatus === "success" && (
-                <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-              )}
-              {operationStatus === "error" && (
-                <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
-              )}
-              {!operationStatus && (
-                <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
-              )}
-              <span className={`text-sm font-medium ${
-                operationStatus === "success" 
-                  ? "text-green-800"
-                  : operationStatus === "error"
-                  ? "text-red-800"
-                  : "text-blue-800"
-              }`}>
-                {lastOperation}
-              </span>
-            </div>
-          </div>
+          <Card
+            className={`mb-6 ${
+              operationStatus === "success"
+                ? "border-green-200 bg-green-50"
+                : operationStatus === "error"
+                  ? "border-red-200 bg-red-50"
+                  : "border-blue-200 bg-blue-50"
+            }`}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                {getStatusIcon(operationStatus)}
+                <span
+                  className={`text-sm font-medium ${
+                    operationStatus === "success"
+                      ? "text-green-800"
+                      : operationStatus === "error"
+                        ? "text-red-800"
+                        : "text-blue-800"
+                  }`}
+                >
+                  {lastOperation}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {currentUser?.role === "ADMIN" && (
-          <div className="mb-6">
-            <label className="text-sm font-medium text-gray-700">Scan Mode</label>
-            <div className="mt-2 space-x-4">
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  className="form-radio"
-                  name="scanMode"
-                  value="checkout"
-                  checked={scanMode === "checkout"}
-                  onChange={(e) => setScanMode(e.target.value as "checkout" | "add")}
-                />
-                <span className="ml-2">Checkout Book</span>
-              </label>
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  className="form-radio"
-                  name="scanMode"
-                  value="add"
-                  checked={scanMode === "add"}
-                  onChange={(e) => setScanMode(e.target.value as "checkout" | "add")}
-                />
-                <span className="ml-2">Add New Book</span>
-              </label>
-            </div>
-          </div>
+          <Card className="mb-6">
+            <CardHeader>
+              <h3 className="text-lg font-semibold text-gray-900">Scan Mode</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="scanMode"
+                    value="checkout"
+                    checked={scanMode === "checkout"}
+                    onChange={(e) => setScanMode(e.target.value as "checkout" | "add")}
+                    className="text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <ShoppingCart className="w-5 h-5 text-blue-500" />
+                    <span className="text-gray-900">Checkout Book</span>
+                  </div>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="scanMode"
+                    value="add"
+                    checked={scanMode === "add"}
+                    onChange={(e) => setScanMode(e.target.value as "checkout" | "add")}
+                    className="text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <BookPlus className="w-5 h-5 text-green-500" />
+                    <span className="text-gray-900">Add New Book</span>
+                  </div>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="mb-4">
-            <video
-              ref={videoRef}
-              className="w-full max-w-md mx-auto rounded-lg bg-gray-100"
-              style={{ display: isScanning ? "block" : "none" }}
-            />
-          </div>
-
-          <div className="flex justify-center space-x-4 mb-6">
-            {!isScanning ? (
-              <button
-                onClick={startScanning}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Start Scanning
-              </button>
-            ) : (
-              <button
-                onClick={stopScanning}
-                className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-              >
-                Stop Scanning
-              </button>
-            )}
-          </div>
-
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Manual Entry</h3>
-            <form onSubmit={handleManualSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="isbn" className="block text-sm font-medium text-gray-700">
-                  ISBN
-                </label>
-                <input
-                  type="text"
-                  id="isbn"
-                  value={scannedCode}
-                  onChange={(e) => setScannedCode(e.target.value)}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter ISBN manually"
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <ScanLine className="w-6 h-6 text-blue-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Camera Scanner</h3>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="relative">
+                <video
+                  ref={videoRef}
+                  className={`w-full max-w-md mx-auto rounded-lg bg-gray-100 ${
+                    isScanning ? "block" : "hidden"
+                  }`}
                 />
+                {!isScanning && (
+                  <div className="w-full max-w-md mx-auto h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <ScanLine className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500">Camera preview will appear here</p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <button
-                type="submit"
-                disabled={!scannedCode}
-                className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-              >
-                {scanMode === "checkout" ? "Checkout Book" : "Add Book"}
-              </button>
+
+              <div className="flex justify-center">
+                {!isScanning ? (
+                  <Button onClick={startScanning} size="lg">
+                    <Play className="w-5 h-5 mr-2" />
+                    Start Scanning
+                  </Button>
+                ) : (
+                  <Button onClick={stopScanning} variant="danger" size="lg">
+                    <Square className="w-5 h-5 mr-2" />
+                    Stop Scanning
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-gray-900">Manual Entry</h3>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleManualSubmit} className="space-y-4">
+              <Input
+                label="ISBN"
+                value={scannedCode}
+                onChange={(e) => setScannedCode(e.target.value)}
+                placeholder="Enter ISBN manually (e.g., 9781234567890)"
+                helper="Enter the 10 or 13 digit ISBN number"
+              />
+              <Button type="submit" disabled={!scannedCode} className="w-full" variant="primary">
+                {scanMode === "checkout" ? (
+                  <>
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Checkout Book
+                  </>
+                ) : (
+                  <>
+                    <BookPlus className="w-4 h-4 mr-2" />
+                    Add Book
+                  </>
+                )}
+              </Button>
             </form>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -1,12 +1,9 @@
-#\!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "Running pre-commit checks..."
 
 echo "Running Rust clippy..."
-cd services/api && cargo clippy -- -D warnings && cd ../..
+( cd services/api && cargo clippy -- -D warnings ) || exit 1
 
 echo "Running TypeScript type checks..."
-bun typecheck
+bun run typecheck || exit 1
 
-echo "Pre-commit checks completed successfully\!"
+echo "Pre-commit checks completed successfully!"

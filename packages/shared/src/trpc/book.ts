@@ -38,10 +38,12 @@ export const bookRouter = t.router({
     }),
 
   update: t.procedure
-    .input(z.object({
-      id: z.string().uuid(),
-      data: UpdateBookSchema,
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        data: UpdateBookSchema,
+      }),
+    )
     .output(BookSchema)
     .mutation(async ({ input: _input }) => {
       throw new Error("Not implemented");
@@ -55,10 +57,12 @@ export const bookRouter = t.router({
     }),
 
   addOrUpdateByIsbn: t.procedure
-    .input(z.object({
-      isbn: z.string().min(10).max(13),
-      data: CreateBookSchema.partial(),
-    }))
+    .input(
+      z.object({
+        isbn: z.string().min(10).max(13),
+        data: CreateBookSchema.partial(),
+      }),
+    )
     .output(BookSchema)
     .mutation(async ({ input: _input }) => {
       throw new Error("Not implemented");

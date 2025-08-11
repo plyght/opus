@@ -69,7 +69,7 @@ pub async fn send_overdue_notifications(db: &PgPool) -> Result<()> {
 
         let response = client
             .post("https://api.resend.com/emails")
-            .header("Authorization", format!("Bearer {}", resend_api_key))
+            .header("Authorization", format!("Bearer {resend_api_key}"))
             .header("Content-Type", "application/json")
             .json(&email_body)
             .send()

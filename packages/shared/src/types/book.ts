@@ -6,7 +6,12 @@ export const BookSchema = z.object({
   title: z.string().min(1).max(500),
   author: z.string().min(1).max(200),
   publisher: z.string().max(200).optional(),
-  publishedYear: z.number().int().min(1000).max(new Date().getFullYear()).optional(),
+  publishedYear: z
+    .number()
+    .int()
+    .min(1000)
+    .max(new Date().getFullYear())
+    .optional(),
   genre: z.string().max(100).optional(),
   description: z.string().max(2000).optional(),
   coverUrl: z.string().url().optional(),

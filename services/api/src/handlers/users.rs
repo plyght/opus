@@ -34,16 +34,16 @@ async fn list_users(
 
     if let Some(ref q) = query.query {
         where_conditions.push("(name ILIKE $1 OR email ILIKE $1)".to_string());
-        search_params.push(format!("%{}%", q));
+        search_params.push(format!("%{q}%"));
     }
     if let Some(ref role) = query.role {
         let param_num = search_params.len() + 1;
-        where_conditions.push(format!("role = ${}", param_num));
-        search_params.push(format!("{:?}", role).to_uppercase());
+        where_conditions.push(format!("role = ${param_num}"));
+        search_params.push(format!("{role:?}").to_uppercase());
     }
     if let Some(is_active) = query.is_active {
         let param_num = search_params.len() + 1;
-        where_conditions.push(format!("is_active = ${}", param_num));
+        where_conditions.push(format!("is_active = ${param_num}"));
         search_params.push(is_active.to_string());
     }
 
@@ -53,7 +53,7 @@ async fn list_users(
         format!(" WHERE {}", where_conditions.join(" AND "))
     };
 
-    let count_sql = format!("SELECT COUNT(*) FROM users{}", where_clause);
+    let count_sql = format!("SELECT COUNT(*) FROM users{where_clause}");
     let mut count_query = sqlx::query(&count_sql);
 
     for param in &search_params {
@@ -66,10 +66,7 @@ async fn list_users(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .get(0);
 
-    let users_sql = format!(
-        "SELECT * FROM users{} ORDER BY created_at DESC LIMIT {} OFFSET {}",
-        where_clause, limit, offset
-    );
+    let users_sql = format!("SELECT * FROM users{where_clause} ORDER BY created_at DESC LIMIT {limit} OFFSET {offset}");
 
     let mut users_query = sqlx::query_as::<_, User>(&users_sql);
 
@@ -140,10 +137,10 @@ async fn get_current_user(
 
     // Validate token with auth service
     let auth_service_url = "http://localhost:3001";
-    
+
     let client = reqwest::Client::new();
     let response = client
-        .post(format!("{}/verify-token", auth_service_url))
+        .post(format!("{auth_service_url}/verify-token"))
         .json(&serde_json::json!({ "token": token }))
         .send()
         .await

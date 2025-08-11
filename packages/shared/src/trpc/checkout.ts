@@ -25,10 +25,12 @@ export const checkoutRouter = t.router({
     }),
 
   getUserCheckouts: t.procedure
-    .input(z.object({
-      userId: z.string().uuid().optional(),
-      status: z.enum(["ACTIVE", "RETURNED", "OVERDUE"]).optional(),
-    }))
+    .input(
+      z.object({
+        userId: z.string().uuid().optional(),
+        status: z.enum(["ACTIVE", "RETURNED", "OVERDUE"]).optional(),
+      }),
+    )
     .output(z.array(CheckoutWithDetailsSchema))
     .query(async ({ input: _input }) => {
       throw new Error("Not implemented");

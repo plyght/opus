@@ -38,10 +38,12 @@ export const userRouter = t.router({
     }),
 
   update: t.procedure
-    .input(z.object({
-      id: z.string().uuid(),
-      data: UpdateUserSchema,
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        data: UpdateUserSchema,
+      }),
+    )
     .output(UserSchema)
     .mutation(async ({ input: _input }) => {
       throw new Error("Not implemented");
@@ -54,9 +56,7 @@ export const userRouter = t.router({
       throw new Error("Not implemented");
     }),
 
-  getCurrentUser: t.procedure
-    .output(UserSchema.nullable())
-    .query(async () => {
-      throw new Error("Not implemented");
-    }),
+  getCurrentUser: t.procedure.output(UserSchema.nullable()).query(async () => {
+    throw new Error("Not implemented");
+  }),
 });

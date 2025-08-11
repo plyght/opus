@@ -9,7 +9,9 @@ export const PaginationSchema = z.object({
   offset: z.number().int().min(0).default(0),
 });
 
-export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(
+  itemSchema: T,
+) =>
   z.object({
     items: z.array(itemSchema),
     total: z.number().int().min(0),

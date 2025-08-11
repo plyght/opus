@@ -33,24 +33,24 @@ async fn list_books(
 
     if let Some(ref q) = query.query {
         where_conditions.push("(title ILIKE $1 OR author ILIKE $1)".to_string());
-        search_params.push(format!("%{}%", q));
+        search_params.push(format!("%{q}%"));
     }
 
     if let Some(ref isbn) = query.isbn {
         let param_num = search_params.len() + 1;
-        where_conditions.push(format!("isbn = ${}", param_num));
+        where_conditions.push(format!("isbn = ${param_num}"));
         search_params.push(isbn.clone());
     }
 
     if let Some(ref author) = query.author {
         let param_num = search_params.len() + 1;
-        where_conditions.push(format!("author ILIKE ${}", param_num));
-        search_params.push(format!("%{}%", author));
+        where_conditions.push(format!("author ILIKE ${param_num}"));
+        search_params.push(format!("%{author}%"));
     }
 
     if let Some(ref genre) = query.genre {
         let param_num = search_params.len() + 1;
-        where_conditions.push(format!("genre = ${}", param_num));
+        where_conditions.push(format!("genre = ${param_num}"));
         search_params.push(genre.clone());
     }
 
@@ -60,7 +60,7 @@ async fn list_books(
         format!(" WHERE {}", where_conditions.join(" AND "))
     };
 
-    let count_sql = format!("SELECT COUNT(*) FROM books{}", where_clause);
+    let count_sql = format!("SELECT COUNT(*) FROM books{where_clause}");
     let mut count_query = sqlx::query(&count_sql);
 
     for param in &search_params {
@@ -73,10 +73,7 @@ async fn list_books(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .get(0);
 
-    let books_sql = format!(
-        "SELECT * FROM books{} ORDER BY created_at DESC LIMIT {} OFFSET {}",
-        where_clause, limit, offset
-    );
+    let books_sql = format!("SELECT * FROM books{where_clause} ORDER BY created_at DESC LIMIT {limit} OFFSET {offset}");
 
     let mut books_query = sqlx::query_as::<_, Book>(&books_sql);
 

@@ -1,5 +1,8 @@
 use axum::{
-    http::{header::{AUTHORIZATION, CONTENT_TYPE}, Method, StatusCode},
+    http::{
+        header::{AUTHORIZATION, CONTENT_TYPE},
+        Method, StatusCode,
+    },
     response::Json,
     routing::get,
     Router,
@@ -76,18 +79,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         warn!("Supabase sync not configured - real-time updates will not be synced");
     }
 
-    let app_state = AppState { 
+    let app_state = AppState {
         db: pool,
         supabase_sync,
     };
 
     let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::OPTIONS,
+        ])
         .allow_headers([CONTENT_TYPE, AUTHORIZATION])
         .allow_credentials(true)
-        .allow_origin([
-            "http://localhost:3000".parse().unwrap(),
-        ]);
+        .allow_origin(["http://localhost:3000".parse().unwrap()]);
 
     let app = Router::new()
         .route("/health", get(health_check))
@@ -97,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(cors)
         .with_state(app_state);
 
-    let bind_addr = format!("0.0.0.0:{}", api_port);
+    let bind_addr = format!("0.0.0.0:{api_port}");
     let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
     info!("Server running on http://{}", bind_addr);
 
